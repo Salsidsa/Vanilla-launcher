@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
@@ -25,7 +26,10 @@ import java.util.*;
 
 public class LauncherController {
 
-    private static final String MODDED_VERSION  = "26.1.1";
+    private static final String APP_VERSION      = "1.0.0";
+    private static final String MODDED_VERSION   = "26.1.1";
+    private static final String GITHUB_RELEASES_API =
+            "https://api.github.com/repos/Salsidsa/Vanilla-launcher/releases/latest";
 
     // ── FXML fields ──────────────────────────────────────────────────────────
     @FXML private ComboBox<VersionEntry> versionBox;
@@ -95,6 +99,10 @@ public class LauncherController {
         Thread w = new Thread(this::watchVersionsDir);
         w.setDaemon(true);
         w.start();
+
+        Thread u = new Thread(this::checkForUpdates);
+        u.setDaemon(true);
+        u.start();
     }
 
     // ── Version loading ───────────────────────────────────────────────────────
@@ -293,6 +301,117 @@ public class LauncherController {
     public void onDiscord() {
         try { Desktop.getDesktop().browse(new URI("https://discord.gg/YFhgyuhRgG")); }
         catch (Exception ignored) {}
+    }
+
+    // ── Auto-update ───────────────────────────────────────────────────────────
+    private void checkForUpdates() {
+        try {
+            java.net.HttpURLConnection conn =
+                    (java.net.HttpURLConnection) new URL(GITHUB_RELEASES_API).openConnection();
+            conn.setConnectTimeout(6000);
+            conn.setReadTimeout(6000);
+            conn.setRequestProperty("Accept", "application/vnd.github+json");
+            if (conn.getResponseCode() != 200) return;
+            String body = new String(conn.getInputStream().readAllBytes());
+            conn.disconnect();
+
+            JsonObject release = JsonParser.parseString(body).getAsJsonObject();
+            String tag = release.get("tag_name").getAsString().replaceFirst("^v", "");
+
+            if (!isNewerVersion(tag, APP_VERSION)) return;
+
+            String assetUrl = null;
+            for (JsonElement el : release.getAsJsonArray("assets")) {
+                JsonObject a = el.getAsJsonObject();
+                if (a.get("name").getAsString().endsWith(".jar")) {
+                    assetUrl = a.get("browser_download_url").getAsString();
+                    break;
+                }
+            }
+            final String downloadUrl = assetUrl;
+
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Update available");
+                alert.setHeaderText("Version " + tag + " is available");
+                alert.setContentText("Install update now?");
+                alert.showAndWait().ifPresent(btn -> {
+                    if (btn == ButtonType.OK && downloadUrl != null)
+                        installUpdate(downloadUrl);
+                });
+            });
+        } catch (Exception ignored) {}
+    }
+
+    private void installUpdate(String url) {
+        launchButton.setDisable(true);
+        setStatus("Downloading update...");
+        showProgress(true);
+
+        Thread t = new Thread(() -> {
+            try {
+                Path currentJar = Path.of(
+                        LauncherController.class
+                                .getProtectionDomain()
+                                .getCodeSource()
+                                .getLocation()
+                                .toURI());
+                Path tmpJar = currentJar.resolveSibling(currentJar.getFileName() + ".update");
+
+                java.net.HttpURLConnection conn =
+                        (java.net.HttpURLConnection) new URL(url).openConnection();
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(120000);
+                long total = conn.getContentLengthLong();
+
+                try (var in  = conn.getInputStream();
+                     var out = Files.newOutputStream(tmpJar)) {
+                    byte[] buf = new byte[8192];
+                    long done = 0; int n;
+                    while ((n = in.read(buf)) != -1) {
+                        out.write(buf, 0, n);
+                        done += n;
+                        final long d = done, tot = total;
+                        Platform.runLater(() ->
+                                progressBar.setProgress(tot > 0 ? (double) d / tot : -1));
+                    }
+                }
+
+                Files.move(tmpJar, currentJar, StandardCopyOption.REPLACE_EXISTING);
+
+                Platform.runLater(() -> {
+                    showProgress(false);
+                    launchButton.setDisable(false);
+                    Alert done = new Alert(Alert.AlertType.INFORMATION);
+                    done.setTitle("Update installed");
+                    done.setHeaderText("Update downloaded successfully");
+                    done.setContentText("Restart the launcher to apply the update.");
+                    done.showAndWait();
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    showProgress(false);
+                    launchButton.setDisable(false);
+                    setStatusDirect("Update failed: " + e.getMessage());
+                });
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private static boolean isNewerVersion(String remote, String local) {
+        try {
+            int[] r = Arrays.stream(remote.split("\\.")).mapToInt(Integer::parseInt).toArray();
+            int[] l = Arrays.stream(local.split("\\.")).mapToInt(Integer::parseInt).toArray();
+            for (int i = 0; i < Math.max(r.length, l.length); i++) {
+                int rv = i < r.length ? r[i] : 0;
+                int lv = i < l.length ? l[i] : 0;
+                if (rv > lv) return true;
+                if (rv < lv) return false;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
