@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.irislauncher.ui.LauncherController"
+      spacing="20" alignment="CENTER"
+      style="-fx-background-color: #1a1a2e; -fx-padding: 36;">
+
+    <Label text="IRIS LAUNCHER"
+           style="-fx-text-fill: #7ec8e3; -fx-font-size: 30; -fx-font-weight: bold;"/>
+
+    <Label text="Minecraft 26.1.1 + Iris + Complementary Unbound"
+           style="-fx-text-fill: #888888; -fx-font-size: 13;"/>
+
+    <!-- Ник -->
+    <VBox spacing="8" alignment="CENTER"
+          style="-fx-background-color: #16213e; -fx-background-radius: 10; -fx-padding: 20;">
+
+        <Label text="Введи ник:"
+               style="-fx-text-fill: #cccccc; -fx-font-size: 13;"/>
+
+        <TextField fx:id="nicknameField" promptText="Steve"
+                   prefWidth="240"
+                   style="-fx-background-color: #0f3460; -fx-text-fill: white;
+                          -fx-prompt-text-fill: #666; -fx-font-size: 15;
+                          -fx-background-radius: 6; -fx-padding: 10;
+                          -fx-alignment: CENTER;"/>
+    </VBox>
+
+    <!-- Кнопка запуска -->
+    <Button fx:id="launchButton" text="ИГРАТЬ"
+            onAction="#onLaunch" prefWidth="240" prefHeight="52"
+            style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 18;
+                   -fx-font-weight: bold; -fx-background-radius: 10;"/>
+
+    <!-- Прогресс -->
+    <VBox spacing="6" alignment="CENTER" fx:id="progressBox" visible="false" managed="false">
+        <ProgressBar fx:id="progressBar" prefWidth="380" progress="0"/>
+        <Label fx:id="statusLabel" text="" wrapText="true" prefWidth="380"
+               style="-fx-text-fill: #aaaaaa; -fx-font-size: 11;"/>
+    </VBox>
+
+    <!-- Консоль -->
+    <TextArea fx:id="consoleArea" prefWidth="380" prefHeight="110"
+              editable="false" wrapText="true"
+              style="-fx-control-inner-background: #0d0d1a; -fx-text-fill: #88ff88;
+                     -fx-font-family: 'Monospace'; -fx-font-size: 11;"/>
+
+</VBox>

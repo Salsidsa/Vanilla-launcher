@@ -1,0 +1,8 @@
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\Main.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\auth\AuthResult.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\download\FabricInstaller.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\download\MinecraftDownloader.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\download\ModDownloader.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\launch\GameLauncher.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\ui\LauncherApp.java
+C:\Users\sdany\Desktop\iris\src\main\java\com\irislauncher\ui\LauncherController.java
