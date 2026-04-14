@@ -2,4 +2,7 @@ build/
 out/
 .gradle/
 .claude/
+CLAUDE.md
+_pkg_tmp/
+*.exe
 *.class
